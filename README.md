@@ -18,3 +18,6 @@ These are my templates and configurations I use in various projects and deployme
 [Terraform](https://github.com/hareeshab/Prometheus_Grafana/tree/main/terraform) - Infrastructure as code software to plan, deploy and manage infrastructure.
  
 [Vagrant](https://github.com/hareeshab/Prometheus_Grafana/tree/main/vagrant) - Automate development environments, packages, operating system configuration, users, and more.
+Grafana Promotheus installation Video link:
+
+ https://www.youtube.com/watch?v=9TJx7QTrTyo&t=1174s
