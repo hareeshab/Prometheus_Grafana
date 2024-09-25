@@ -1,0 +1,214 @@
+Monitoring tool
+
+Monitoring tools are used to continuously keep track of the status of the system in use, 
+in order to have the earliest warning of failures, defects or problems and to improve them. 
+There are monitoring tools for servers, networks, databases, security, performance, website 
+and internet usage, and applications.
+
+few Monitoring tools
+
+Datadog
+Nagios
+Zabix
+
+
+
+Install Docker (if it not installed)
+-------------------------------------------  
+
+  
+Docker Portainer Installation
+=======================================
+
+Create Docker Volume(run below command)
+
+ Step 1: docker volume create portainer_data
+
+ Step 2: Install Portainer Server(run below command)
+
+docker run -d -p 8000:8000 -p 9443:9443 --name portainer \
+--restart=always \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v portainer_data:/data \
+portainer/portainer-ce:2.9.3
+
+After inatalling the portainer we need to restart the docker.
+
+sudo service docker restart.
+
+to launch Portainer we need to use https://<IPAddress>:9443
+
+
+We need to add a file in the below location with the below data.
+
+Create a directory under etc.
+--------------------------------
+   vi /etc/prometheus/prometheus.yml
+--------------------------------
+
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  # external_labels:
+  #  monitor: 'codelab-monitor'
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Example job for node_exporter
+  - job_name: 'node_exporter'
+    static_configs:
+       - targets: ['node_exporter:9100']
+
+  # Example job for cadvisor
+  - job_name: 'cadvisor'
+    static_configs:
+       - targets: ['cadvisor:8080']
+
+=============================================================================
+
+Need to add compose file under stack for prometheus, grafana Node exporter, cadvisor.
+
+Open Portainer and select the Stack and add new stack and add below details(compose file).
+
+----------------------------------------
+Create stack for monitoring in portainer
+----------------------------------------
+
+
+version: '3'
+
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - /etc/prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      
+
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+    
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    pid: host
+    restart: unless-stopped
+    volumes:
+      - '/:/host:ro,rslave'
+      
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+    container_name: cadvisor
+    # ports:
+    #   - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    restart: unless-stopped
+
+
+
+----------------------------------------
+Launch Grafana using 3000 port.
+add datasource in grafana
+----------------------------------------
+
+
+--> select add datasorce
+
+--> put the prometheus url : http://<IPaddress>:9090
+
+--> at last --> save and test --> if it success
+
+--> Click on Dashoard and selct import dashboard 
+ type the code 1860 and import for node exporter. --> Node exporter
+
+--> import dashboard using 193 for docker monitoring
+
+--> select at last source prometheus
+
+
+To Add external server we need to download/intall the node exporter in the target machine.
+
+
+ wget https://github.com/prometheus/node_exporter/releases
+
+extart the file
+
+tar -xvfz
+
+and we need to run the node exporter by using below command.
+
+./node_exporter
+
+===================================================================
+
+
+
+Grafana dashboards
+
+
+
+Node exporter: 1860
+
+Cadvisor: 14282
+
+
+
+
+***********************************************************************
+
+Helm charts for prometheus and grafana :
+
+https://medium.com/@maheshbiradar8887/eks-monitoring-using-helm-prometheus-and-grafana-dashboard-e47093c08ece
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
